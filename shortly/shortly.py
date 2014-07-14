@@ -64,6 +64,13 @@ class Shortly(object):
                 return redirect('/%s+' % short_id)
         return self.render_template('new_url.html', error=error, url=url)
 
+    def on_follow_short_link(self, request, short_id):
+        link_target = self.redis.get('url-target:' + short_id)
+        if link_target is None:
+            raise NotFound()
+        self.redis.incr('click-count:' + short_id)
+        return redirect(link_target)
+
 
 def is_valid_url(url):
     parts = urlparse.urlparse(url)
