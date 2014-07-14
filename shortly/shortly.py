@@ -22,7 +22,12 @@ class Shortly(object):
                             ])
 
     def dispatch_request(self, request):
-        return Response('Hello World!')
+        adapter = self.url_map.bind_to_environ(request.environ)
+        try:
+            endpoint, values = adapter.match()
+            return getattr(self, 'on_' + endpoint)(request, **values)
+        except HTTPException, e:
+            return e
 
     def wsgi_app(self, environ, start_response):
         request = Request(environ)
@@ -37,13 +42,7 @@ class Shortly(object):
         t = self.jinja_env.get_template(template_name)
         return Response(t.render(context), mimetype='text/html')
 
-    def dispatch_request(self, request):
-        adapter = self.url_map.bind_to_environ(request.environ)
-        try:
-            endpoint, values = adapter.match()
-            return getattr(self, 'on_' + endpoint)(request, **values)
-        except HTTPException, e:
-            return e
+
 
 
 def create_app(redis_host='localhost', redis_port=6379, with_static=True):
