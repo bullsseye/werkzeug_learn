@@ -71,6 +71,17 @@ class Shortly(object):
         self.redis.incr('click-count:' + short_id)
         return redirect(link_target)
 
+    def on_short_link_details(self, request, short_id):
+        link_target = self.redis.get('url-target:' + short_id)
+        if link_target is None:
+            raise NotFound()
+        click_count = int(self.redis.get('click-count:' + short_id) or 0)
+        return self.render_template('short_link_details.html',
+            link_target=link_target,
+            short_id=short_id,
+            click_count=click_count
+    )
+
 
 def is_valid_url(url):
     parts = urlparse.urlparse(url)
